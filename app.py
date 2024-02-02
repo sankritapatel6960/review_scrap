@@ -2,10 +2,13 @@ from flask import Flask, render_template, request,jsonify
 from flask_cors import CORS,cross_origin
 import requests
 from bs4 import BeautifulSoup as bs
-from urllib.request import urlopen as uReq
+import urllib
 import logging
 logging.basicConfig(filename="scrapper.log" , level=logging.INFO)
 import pymongo
+
+import ssl
+context = ssl._create_unverified_context()
 
 app = Flask(__name__)
 
@@ -19,7 +22,7 @@ def index():
         try:
             searchString = request.form['content'].replace(" ","")
             flipkart_url = "https://www.flipkart.com/search?q=" + searchString
-            uClient = uReq(flipkart_url)
+            uClient = urllib.request.urlopen(flipkart_url, context=context)
             flipkartPage = uClient.read()
             uClient.close()
             flipkart_html = bs(flipkartPage, "html.parser")
@@ -30,7 +33,7 @@ def index():
             prodRes = requests.get(productLink)
             prodRes.encoding='utf-8'
             prod_html = bs(prodRes.text, "html.parser")
-            print(prod_html)
+            # print(prod_html)
             commentboxes = prod_html.find_all('div', {'class': "_16PBlm"})
 
             filename = searchString + ".csv"
@@ -94,4 +97,4 @@ def index():
 
 
 if __name__=="__main__":
-     app.run(host="0.0.0.0")
+     app.run()
